@@ -1,339 +1,82 @@
-"use client";
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengingat PR SMANU CMP</title>
+    <!-- Tailwind CSS untuk styling cepat dan responsif di HP -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen pb-12">
 
-import React, { useState, useEffect } from "react";
-import { initializeApp } from "firebase/app";
-import { getDatabase, ref, push, set, onValue, update, remove } from "firebase/database";
-
-export default function HomeworkReminderApp() {
-  const [activeTab, setActiveTab] = useState("siswa"); // 'siswa', 'guru', 'settings'
-  const [daftarTugas, setDaftarTugas] = useState([]);
-  
-  // Konfigurasi Firebase dari LocalStorage / State
-  const [dbConfig, setDbConfig] = useState({
-    apiKey: "",
-    databaseURL: ""
-  });
-  const [tempConfig, setTempConfig] = useState({ apiKey: "", databaseURL: "" });
-  const [db, setDb] = useState(null);
-
-  // Load config dari localStorage saat pertama buka
-  useEffect(() => {
-    const savedApiKey = localStorage.getItem("fb_api_key") || "";
-    const savedDbUrl = localStorage.getItem("fb_db_url") || "";
-    if (savedApiKey && savedDbUrl) {
-      setDbConfig({ apiKey: savedApiKey, databaseURL: savedDbUrl });
-      setTempConfig({ apiKey: savedApiKey, databaseURL: savedDbUrl });
-      initFirebase(savedApiKey, savedDbUrl);
-    }
-  }, []);
-
-  const initFirebase = (apiKey, databaseURL) => {
-    try {
-      const app = initializeApp({ apiKey, databaseURL, projectId: "dynamic-project" });
-      const database = getDatabase(app);
-      setDb(database);
-    } catch (e) {
-      console.error("Gagal inisialisasi Firebase:", e);
-    }
-  };
-
-  const handleSaveConfig = (e) => {
-    e.preventDefault();
-    localStorage.setItem("fb_api_key", tempConfig.apiKey);
-    localStorage.setItem("fb_db_url", tempConfig.databaseURL);
-    setDbConfig(tempConfig);
-    initFirebase(tempConfig.apiKey, tempConfig.databaseURL);
-    alert("Koneksi Firebase berhasil disimpan!");
-    setActiveTab("siswa");
-  };
-
-  // State Form Guru
-  const [formTugas, setFormTugas] = useState({
-    mapel: "",
-    guru: "",
-    judul: "",
-    deskripsi: "",
-    deadline: ""
-  });
-
-  // Ambil Data Real-time dari Firebase
-  useEffect(() => {
-    if (!db) return;
-    const tugasRef = ref(db, 'tugas_pr');
-    const unsubscribe = onValue(tugasRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        const list = Object.keys(data).map(key => ({
-          idKey: key,
-          ...data[key]
-        }));
-        setDaftarTugas(list);
-      } else {
-        setDaftarTugas([]);
-      }
-    });
-    return () => unsubscribe();
-  }, [db]);
-
-  // Tambah Tugas (Guru)
-  const handleTambahTugas = async (e) => {
-    e.preventDefault();
-    if (!db) {
-      alert("Harap atur konfigurasi Firebase terlebih dahulu di menu ⚙️ Pengaturan!");
-      setActiveTab("settings");
-      return;
-    }
-    try {
-      const tugasRef = ref(db, 'tugas_pr');
-      const newRef = push(tugasRef);
-      await set(newRef, {
-        ...formTugas,
-        createdAt: new Date().toISOString()
-      });
-      setFormTugas({ mapel: "", guru: "", judul: "", deskripsi: "", deadline: "" });
-      alert("Tugas berhasil dipublikasikan ke semua siswa!");
-      setActiveTab("siswa");
-    } catch (error) {
-      console.error("Gagal menyimpan:", error);
-      alert("Terjadi kesalahan saat menyimpan tugas.");
-    }
-  };
-
-  // Hapus Tugas
-  const hapusTugas = async (idKey) => {
-    if (confirm("Yakin ingin menghapus tugas ini?")) {
-      try {
-        await remove(ref(db, `tugas_pr/${idKey}`));
-      } catch (err) {
-        console.error(err);
-      }
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans">
-      {/* Header */}
-      <header className="bg-emerald-600 text-white shadow-md sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
-          <div>
-            <h1 className="text-lg font-bold flex items-center gap-1.5">📚 Pengingat PR Sekolah</h1>
-            <p className="text-[11px] text-emerald-100">Boarding School Homework Reminder</p>
-          </div>
-          <div className="flex gap-1.5">
-            <button 
-              onClick={() => setActiveTab("siswa")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${activeTab === "siswa" ? "bg-white text-emerald-700 shadow" : "bg-emerald-700 hover:bg-emerald-500"}`}
-            >
-              🎓 Siswa
-            </button>
-            <button 
-              onClick={() => setActiveTab("guru")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${activeTab === "guru" ? "bg-white text-emerald-700 shadow" : "bg-emerald-700 hover:bg-emerald-500"}`}
-            >
-              👨‍🏫 Guru
-            </button>
-            <button 
-              onClick={() => setActiveTab("settings")}
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition ${activeTab === "settings" ? "bg-white text-emerald-700 shadow" : "bg-emerald-700 hover:bg-emerald-500"}`}
-              title="Konfigurasi Firebase"
-            >
-              ⚙️
-            </button>
-          </div>
+    <!-- Header / Navbar -->
+    <header class="bg-indigo-600 text-white shadow-md">
+        <div class="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 class="text-xl font-bold">📚 Pengingat PR SMANU CMP</h1>
+            <span class="text-xs bg-indigo-500 px-3 py-1 rounded-full">Siswa & Guru</span>
         </div>
-      </header>
+    </header>
 
-      {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 py-6">
-        
-        {/* TAB 1: DASHBOARD SISWA */}
-        {activeTab === "siswa" && (
-          <div className="space-y-4">
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex justify-between items-center">
-              <div>
-                <h2 className="text-base font-bold text-slate-900">Daftar Tugas & PR Aktif</h2>
-                <p className="text-xs text-slate-500">Pantau tenggat waktu tugasmu agar tidak terlewat</p>
-              </div>
-              <span className="bg-emerald-50 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-full border border-emerald-100">
-                {daftarTugas.length} Tugas Aktif
-              </span>
-            </div>
+    <!-- Konten Utama Dashboard -->
+    <main class="max-w-4xl mx-auto px-4 mt-6 space-y-6">
 
-            {!dbConfig.apiKey && (
-              <div className="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-xl text-xs flex justify-between items-center">
-                <span>⚠️ Firebase belum terhubung. Guru/Siswa mohon atur konfigurasi terlebih dahulu.</span>
-                <button onClick={() => setActiveTab("settings")} className="underline font-bold">Atur Sekarang</button>
-              </div>
-            )}
+        <!-- Form Input Tugas (Untuk Guru/Pengurus) -->
+        <section class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+            <h2 class="text-lg font-semibold text-gray-700 mb-3">➕ Tambah Tugas Baru</h2>
+            <form id="prForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">Mata Pelajaran</label>
+                    <input type="text" id="mapel" required placeholder="Contoh: Matematika / Informatika" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">Detail Tugas / PR</label>
+                    <textarea id="deskripsi" rows="2" required placeholder="Contoh: Kerjakan soal halaman 45..." class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">Tenggat Waktu (Deadline)</label>
+                    <input type="datetime-local" id="deadline" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded-lg font-medium hover:bg-indigo-700 transition text-sm">Simpan & Publikasikan Tugas</button>
+            </form>
+        </section>
 
-            {daftarTugas.length === 0 ? (
-              <div className="text-center py-12 bg-white rounded-xl border border-slate-100 p-6">
-                <p className="text-3xl mb-2">🎉</p>
-                <p className="text-sm font-semibold text-slate-700">Belum ada PR saat ini!</p>
-                <p className="text-xs text-slate-400 mt-1">Nikmati waktu istirahatmu atau belajar materi berikutnya.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {daftarTugas.map((tugas) => {
-                  const deadlineDate = new Date(tugas.deadline);
-                  const now = new Date();
-                  const diffHours = (deadlineDate - now) / (1000 * 60 * 60);
-                  
-                  let badgeColor = "bg-green-100 text-green-700 border-green-200";
-                  let statusText = "Aman";
-                  if (diffHours < 0) {
-                    badgeColor = "bg-slate-100 text-slate-600 border-slate-200";
-                    statusText = "Sudah Lewat";
-                  } else if (diffHours <= 24) {
-                    badgeColor = "bg-red-100 text-red-700 border-red-200 animate-pulse";
-                    statusText = "Mendesak (< 24 Jam)!";
-                  } else if (diffHours <= 48) {
-                    badgeColor = "bg-amber-100 text-amber-700 border-amber-200";
-                    statusText = "Besok Deadline";
-                  }
-
-                  return (
-                    <div key={tugas.idKey} className="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex flex-col justify-between">
-                      <div>
-                        <div className="flex justify-between items-start gap-2 mb-2">
-                          <span className="bg-slate-100 text-slate-700 text-[11px] font-bold px-2 py-0.5 rounded">
-                            {tugas.mapel}
-                          </span>
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${badgeColor}`}>
-                            {statusText}
-                          </span>
+        <!-- Daftar PR / List Tugas (Untuk Siswa) -->
+        <section>
+            <h2 class="text-lg font-semibold text-gray-700 mb-3">📋 Daftar PR Aktif</h2>
+            <div id="daftarPr" class="space-y-3">
+                <!-- Contoh Tampilan Kartu Tugas -->
+                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-indigo-500 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-start">
+                            <span class="text-xs font-bold text-indigo-600 uppercase tracking-wider">Informatika X.2</span>
+                            <span class="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded font-medium">Sisa Waktu: 2 Hari</span>
                         </div>
-                        <h3 className="font-bold text-slate-900 text-sm mb-1">{tugas.judul}</h3>
-                        <p className="text-xs text-slate-600 mb-3 whitespace-pre-wrap">{tugas.deskripsi}</p>
-                      </div>
-                      
-                      <div className="border-t pt-3 mt-2 text-[11px] text-slate-500 space-y-1">
-                        <p>👨‍🏫 Guru: <strong>{tugas.guru}</strong></p>
-                        <p>⏰ Tenggat: <span className="font-semibold text-rose-600">{tugas.deadline.replace("T", " "}</span></p>
-                      </div>
+                        <p class="text-sm font-semibold text-gray-800 mt-1">Membuat laporan proyek web statis Vercel.</p>
+                        <p class="text-xs text-gray-500 mt-1">Deadline: 15 November 2026, 23:59</p>
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
+                </div>
+            </div>
+        </section>
 
-        {/* TAB 2: PANEL GURU (INPUT TUGAS) */}
-        {activeTab === "guru" && (
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 max-w-xl mx-auto">
-            <h2 className="text-base font-bold text-slate-900 mb-1">Tambah Tugas / PR Baru</h2>
-            <p className="text-xs text-slate-500 mb-4">Formulir untuk mempublikasikan pengingat tugas ke seluruh siswa</p>
+    </main>
+
+    <!-- Script Placeholder untuk Database (Firebase / LocalStorage) -->
+    <script>
+        const prForm = document.getElementById('prForm');
+        
+        prForm.addEventListener('submit', function(e) {
+            e.preventDefault();
             
-            <form onSubmit={handleTambahTugas} className="space-y-3.5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium mb-1 text-slate-700">Mata Pelajaran</label>
-                  <input 
-                    type="text" required 
-                    className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-500 outline-none"
-                    value={formTugas.mapel} onChange={e => setFormTugas({...formTugas, mapel: e.target.value})}
-                    placeholder="Contoh: Matematika"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium mb-1 text-slate-700">Nama Guru / Ustadz</label>
-                  <input 
-                    type="text" required 
-                    className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-500 outline-none"
-                    value={formTugas.guru} onChange={e => setFormTugas({...formTugas, guru: e.target.value})}
-                    placeholder="Contoh: Ustadz Ahmad"
-                  />
-                </div>
-              </div>
+            const mapel = document.getElementById('mapel').value;
+            const deskripsi = document.getElementById('deskripsi').value;
+            const deadline = document.getElementById('deadline').value;
 
-              <div>
-                <label className="block text-xs font-medium mb-1 text-slate-700">Judul / Topik Tugas</label>
-                <input 
-                  type="text" required 
-                  className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-500 outline-none"
-                  value={formTugas.judul} onChange={e => setFormTugas({...formTugas, judul: e.target.value})}
-                  placeholder="Contoh: Latihan Soal Halaman 45"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium mb-1 text-slate-700">Instruksi / Detail Tugas</label>
-                <textarea required rows="3"
-                  className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-500 outline-none"
-                  value={formTugas.deskripsi} onChange={e => setFormTugas({...formTugas, deskripsi: e.target.value})}
-                  placeholder="Tuliskan nomor soal atau instruksi pengerjaan..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium mb-1 text-slate-700">Tenggat Waktu (Deadline)</label>
-                <input 
-                  type="datetime-local" required 
-                  className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-500 outline-none"
-                  value={formTugas.deadline} onChange={e => setFormTugas({...formTugas, deadline: e.target.value})}
-                />
-              </div>
-
-              <button type="submit" className="w-full bg-emerald-600 text-white font-medium py-2.5 rounded-lg hover:bg-emerald-700 text-xs transition shadow-sm">
-                Publikasikan Tugas Sekarang
-              </button>
-            </form>
-
-            {/* Daftar Kelola Tugas Guru */}
-            {daftarTugas.length > 0 && (
-              <div className="mt-8 pt-6 border-t">
-                <h3 className="text-xs font-bold text-slate-800 mb-3">Kelola / Hapus Tugas Aktif</h3>
-                <div className="space-y-2">
-                  {daftarTugas.map((t) => (
-                    <div key={t.idKey} className="flex justify-between items-center bg-slate-50 p-2.5 rounded-lg border text-xs">
-                      <div>
-                        <span className="font-semibold text-slate-900">{t.mapel}:</span> {t.judul}
-                      </div>
-                      <button onClick={() => hapusTugas(t.idKey)} className="text-red-600 hover:underline font-bold px-2 py-1">Hapus</button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* TAB 3: PENGATURAN FIREBASE */}
-        {activeTab === "settings" && (
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 max-w-md mx-auto">
-            <h2 className="text-base font-bold text-slate-900 mb-1">⚙️ Konfigurasi Firebase</h2>
-            <p className="text-xs text-slate-500 mb-4">Masukkan data dari Firebase Console agar aplikasi bisa menyimpan data secara online</p>
+            // Di sinilah nanti kita akan menyambungkan data ke database (Firebase)
+            alert(`Tugas ${mapel} berhasil ditambahkan! Siap dihubungkan ke database.`);
             
-            <form onSubmit={handleSaveConfig} className="space-y-3.5">
-              <div>
-                <label className="block text-xs font-medium mb-1 text-slate-700">Firebase API Key</label>
-                <input 
-                  type="text" required 
-                  className="w-full border rounded-lg px-3 py-2 text-xs font-mono focus:ring-2 focus:ring-emerald-500 outline-none"
-                  value={tempConfig.apiKey} onChange={e => setTempConfig({...tempConfig, apiKey: e.target.value})}
-                  placeholder="AIzaSy..."
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium mb-1 text-slate-700">Realtime Database URL</label>
-                <input 
-                  type="text" required 
-                  className="w-full border rounded-lg px-3 py-2 text-xs font-mono focus:ring-2 focus:ring-emerald-500 outline-none"
-                  value={tempConfig.databaseURL} onChange={e => setTempConfig({...tempConfig, databaseURL: e.target.value})}
-                  placeholder="https://proyek-anda-default-rtdb.firebaseio.com"
-                />
-              </div>
-              <button type="submit" className="w-full bg-slate-900 text-white font-medium py-2.5 rounded-lg hover:bg-slate-800 text-xs transition">
-                Simpan & Sambungkan
-              </button>
-            </form>
-          </div>
-        )}
-
-      </main>
-    </div>
-  );
-}
-
+            prForm.reset();
+        });
+    </script>
+</body>
+</html>
 
